@@ -38,7 +38,9 @@ def _credentials(credentials_filename: str = "credentials.json") -> Credentials:
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(credentials_filename, SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file(
+                credentials_filename, SCOPES
+            )
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         with open(_TOKEN_FILENAME, "w") as token:
@@ -102,14 +104,14 @@ def get_attachments(
     if "parts" not in message_content["payload"]:
         return [], []
 
-    saved_attachments = []
-    saved_filenames = []
+    relevant_attachments = []
+    relevant_filenames = []
     parts = message_content["payload"].get("parts", [])
 
     # TODO: Annotate.
     def process_parts(parts, prefix: str = "") -> None:
-        nonlocal saved_attachments
-        nonlocal saved_filenames
+        nonlocal relevant_attachments
+        nonlocal relevant_filenames
         for part in parts:
             if "filename" in part and part["filename"]:
                 if "body" in part and "attachmentId" in part["body"]:
@@ -128,8 +130,8 @@ def get_attachments(
                     # TODO: First validate if attachment is a pdf file.
                     file_data = base64.urlsafe_b64decode(attachment["data"])
 
-                    saved_attachments.append(file_data)
-                    saved_filenames.append(
+                    relevant_attachments.append(file_data)
+                    relevant_filenames.append(
                         part["filename"].replace(" ", "_").replace("/", "-")
                     )
 
@@ -138,8 +140,7 @@ def get_attachments(
                 process_parts(part["parts"], prefix + "--")
 
     process_parts(parts)
-    breakpoint()
-    return saved_attachments, saved_filenames
+    return relevant_attachments, relevant_filenames
 
 
 def export_pdf_wo_password(
