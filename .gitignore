@@ -2,3 +2,8 @@
 # pixi environments
 .pixi
 *.egg-info
+
+# OAuth secrets
+credentials.json
+token.json
+client_secret_*.json
