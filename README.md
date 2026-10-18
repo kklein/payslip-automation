@@ -8,8 +8,15 @@ This repo contains a script which
 
 1. Create a GCP project with Gmail and Google Drive APIs enabled
     - See e.g. the [GMail quickstart](https://developers.google.com/gmail/api/quickstart/python)
-3. Download the OAuth2 Client ID and write it to `credentials.json`.
-4. Run
+2. Run
 ```bash
 pixi run python payslip.py --subject "Payslip"
 ```
+
+Authentication is handled interactively:
+- If no OAuth2 client secrets (`credentials.json`) are found next to `payslip.py`, the Google Cloud console
+  opens in the browser. Create a 'Desktop app' OAuth client, download its JSON and confirm the path when
+  prompted (the latest `~/Downloads/client_secret_*.json` is suggested).
+- If no valid token (`token.json`) is found, or it can't be refreshed, a Google login window opens in the browser.
+
+Both files are git-ignored.
