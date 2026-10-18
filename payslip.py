@@ -218,6 +218,27 @@ def export_pdf_wo_password(
     return True
 
 
+def list_uploaded_files(service: Resource) -> list[dict]:
+    """List non-trashed files on Google Drive created by this app."""
+    files: list[dict] = []
+    page_token = None
+    while True:
+        result = (
+            service.files()
+            .list(
+                q="trashed=false",
+                fields="nextPageToken, files(id, name, createdTime)",
+                pageSize=1000,
+                pageToken=page_token,
+            )
+            .execute()
+        )
+        files.extend(result.get("files", []))
+        page_token = result.get("nextPageToken")
+        if not page_token:
+            return files
+
+
 def upload_file(path: Path, service: Resource):
     media = MediaFileUpload(path)
 
@@ -268,10 +289,16 @@ def main(password: str, subject: str) -> None:
 
     google_drive_service = _google_drive_service(credentials)
 
-    # TODO: Check if file already present on Google Drive.
+    uploaded_names = {
+        file["name"] for file in list_uploaded_files(google_drive_service)
+    }
 
-    for file_path in export_path.iterdir():
+    for file_path in sorted(export_path.iterdir()):
+        if file_path.name in uploaded_names:
+            print(f"Already on Google Drive, skipping: {file_path.name}")
+            continue
         upload_file(file_path, google_drive_service)
+        print(f"Uploaded to Google Drive: {file_path.name}")
 
 
 if __name__ == "__main__":
